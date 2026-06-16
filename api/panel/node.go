@@ -77,13 +77,15 @@ type VAllssNode struct {
 }
 
 type TlsSettings struct {
-	ServerName  string `json:"server_name"`
-	Dest        string `json:"dest"`
-	ServerPort  string `json:"server_port"`
-	ShortId     string `json:"short_id"`
-	PrivateKey  string `json:"private_key"`
-	Mldsa65Seed string `json:"mldsa65Seed"`
-	Xver        uint64 `json:"xver,string"`
+	ServerName  string   `json:"server_name"`
+	ServerNames []string `json:"server_names"`
+	Dest        string   `json:"dest"`
+	ServerPort  string   `json:"server_port"`
+	ShortId     string   `json:"short_id"`
+	ShortIds    []string `json:"short_ids"`
+	PrivateKey  string   `json:"private_key"`
+	Mldsa65Seed string   `json:"mldsa65Seed"`
+	Xver        uint64   `json:"xver,string"`
 }
 
 type EncSettings struct {
@@ -136,7 +138,7 @@ type Hysteria2Node struct {
 	UpMbps                  int    `json:"up_mbps"`
 	DownMbps                int    `json:"down_mbps"`
 	ObfsType                string `json:"obfs"`
-	ObfsPassword            string `json:"obfs-password"`
+	ObfsPassword            string `json:"obfs_password"`
 }
 
 type RawDNS struct {
@@ -328,4 +330,32 @@ func intervalToTime(i interface{}) time.Duration {
 	default:
 		return time.Duration(reflect.ValueOf(i).Int()) * time.Second
 	}
+}
+
+func (t TlsSettings) EffectiveServerNames() []string {
+	if len(t.ServerNames) > 0 {
+		return t.ServerNames
+	}
+	if t.ServerName == "" {
+		return nil
+	}
+	return []string{t.ServerName}
+}
+
+func (t TlsSettings) EffectiveShortIds() []string {
+	if len(t.ShortIds) > 0 {
+		return t.ShortIds
+	}
+	if t.ShortId == "" {
+		return nil
+	}
+	return []string{t.ShortId}
+}
+
+func (t TlsSettings) PrimaryServerName() string {
+	serverNames := t.EffectiveServerNames()
+	if len(serverNames) == 0 {
+		return ""
+	}
+	return serverNames[0]
 }

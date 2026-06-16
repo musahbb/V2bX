@@ -14,6 +14,7 @@ type Conf struct {
 	LogConfig   LogConfig    `json:"Log"`
 	CoresConfig []CoreConfig `json:"Cores"`
 	NodeConfig  []NodeConfig `json:"Nodes"`
+	PprofPort   int          `json:"PprofPort"`
 }
 
 func New() *Conf {

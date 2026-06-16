@@ -12,6 +12,11 @@ import (
 	"github.com/InazumaV/V2bX/common/json5"
 )
 
+const (
+	DefaultNodeRetryCount = 1
+	DefaultNodeTimeout    = 15
+)
+
 type NodeConfig struct {
 	ApiConfig ApiConfig `json:"-"`
 	Options   Options   `json:"-"`
@@ -30,6 +35,7 @@ type ApiConfig struct {
 	Key          string `json:"ApiKey"`
 	NodeType     string `json:"NodeType"`
 	Timeout      int    `json:"Timeout"`
+	RetryCount   int    `json:"RetryCount"`
 	RuleListPath string `json:"RuleListPath"`
 }
 
@@ -71,7 +77,7 @@ func (n *NodeConfig) UnmarshalJSON(data []byte) (err error) {
 
 	n.ApiConfig = ApiConfig{
 		APIHost: "http://127.0.0.1",
-		Timeout: 30,
+		Timeout: DefaultNodeTimeout,
 	}
 	if len(rn.ApiRaw) > 0 {
 		err = json.Unmarshal(rn.ApiRaw, &n.ApiConfig)

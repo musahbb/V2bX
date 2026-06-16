@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"fmt"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"runtime"
@@ -62,6 +65,15 @@ func serverHandle(_ *cobra.Command, _ []string) {
 		log.SetOutput(f)
 	}
 	limiter.Init()
+	// Enable pprof if configured
+	if c.PprofPort != 0 {
+		go func() {
+			log.Infof("Starting pprof server on :%d", c.PprofPort)
+			if err := http.ListenAndServe(fmt.Sprintf("127.0.0.1:%d", c.PprofPort), nil); err != nil {
+				log.WithField("err", err).Error("pprof server failed")
+			}
+		}()
+	}
 	log.Info("Start V2bX...")
 	vc, err := vCore.NewCore(c.CoresConfig)
 	if err != nil {

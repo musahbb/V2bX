@@ -1,6 +1,7 @@
 package node
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -25,7 +26,6 @@ type Controller struct {
 	userReportPeriodic        *task.Task
 	renewCertPeriodic         *task.Task
 	dynamicSpeedLimitPeriodic *task.Task
-	onlineIpReportPeriodic    *task.Task
 	*conf.Options
 }
 
@@ -43,19 +43,19 @@ func NewController(server vCore.Core, api *panel.Client, config *conf.Options) *
 func (c *Controller) Start() error {
 	// First fetch Node Info
 	var err error
-	node, err := c.apiClient.GetNodeInfo()
+	node, err := c.apiClient.GetNodeInfo(context.Background())
 	if err != nil {
 		return fmt.Errorf("get node info error: %s", err)
 	}
 	// Update user
-	c.userList, err = c.apiClient.GetUserList()
+	c.userList, err = c.apiClient.GetUserList(context.Background())
 	if err != nil {
 		return fmt.Errorf("get user list error: %s", err)
 	}
 	if len(c.userList) == 0 {
 		return errors.New("add users error: not have any user")
 	}
-	c.aliveMap, err = c.apiClient.GetUserAlive()
+	c.aliveMap, err = c.apiClient.GetUserAlive(context.Background())
 	if err != nil {
 		return fmt.Errorf("failed to get user alive list: %s", err)
 	}
@@ -66,7 +66,7 @@ func (c *Controller) Start() error {
 	}
 
 	// add limiter
-	l := limiter.AddLimiter(c.tag, &c.LimitConfig, c.userList, c.aliveMap)
+	l := limiter.AddLimiter(node.Type, c.tag, &c.LimitConfig, c.userList, c.aliveMap)
 	// add rule limiter
 	if err = l.UpdateRule(&node.Rules); err != nil {
 		return fmt.Errorf("update rule error: %s", err)
@@ -111,9 +111,6 @@ func (c *Controller) Close() error {
 	}
 	if c.dynamicSpeedLimitPeriodic != nil {
 		c.dynamicSpeedLimitPeriodic.Close()
-	}
-	if c.onlineIpReportPeriodic != nil {
-		c.onlineIpReportPeriodic.Close()
 	}
 	err := c.server.DelNode(c.tag)
 	if err != nil {

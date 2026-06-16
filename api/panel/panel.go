@@ -36,14 +36,19 @@ func New(c *conf.ApiConfig) (*Client, error) {
 		client = resty.NewWithLocalAddr(&net.TCPAddr{
 			IP: net.ParseIP(c.APISendIP),
 		})
-	} else {	
+	} else {
 		client = resty.New()
 	}
-	client.SetRetryCount(3)
+	retryCount := conf.DefaultNodeRetryCount
+	if c.RetryCount > 0 {
+		retryCount = c.RetryCount
+	}
+	client.SetRetryCount(retryCount)
+	client.SetHeader("User-Agent", fmt.Sprintf("V2bX resty/%s", resty.Version))
 	if c.Timeout > 0 {
 		client.SetTimeout(time.Duration(c.Timeout) * time.Second)
 	} else {
-		client.SetTimeout(5 * time.Second)
+		client.SetTimeout(time.Duration(conf.DefaultNodeTimeout) * time.Second)
 	}
 	client.OnError(func(req *resty.Request, err error) {
 		var v *resty.ResponseError

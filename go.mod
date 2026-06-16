@@ -16,7 +16,7 @@ require (
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.19.0
 	github.com/vmihailenco/msgpack/v5 v5.4.1
-	github.com/xtls/xray-core v1.260327.0
+	github.com/xtls/xray-core v1.260425.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.49.0
 	golang.org/x/sys v0.42.0
@@ -330,7 +330,10 @@ require (
 
 replace github.com/sagernet/sing-box v1.13.0 => github.com/wyx2685/sing-box_mod v1.13.0-alpha.5.0.20251202212447-8d054dcd8bfe
 
-replace github.com/xtls/xray-core v1.260327.0 => github.com/wyx2685/xray-core v0.0.0-20251202200223-63db1dc9e9e2
+replace (
+	github.com/xtls/xray-core v1.260327.0 => github.com/wyx2685/xray-core v0.0.0-20251202200223-63db1dc9e9e2
+	github.com/xtls/xray-core v1.260425.0 => github.com/wyx2685/xray-core v0.0.0-20260601140735-13357f3bc706
+)
 
 replace github.com/quic-go/quic-go => github.com/quic-go/quic-go v0.59.1
 

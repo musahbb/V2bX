@@ -1,29 +1,41 @@
 package node
 
 import (
-	"strconv"
+	"context"
+	"errors"
 
 	"github.com/InazumaV/V2bX/api/panel"
 	log "github.com/sirupsen/logrus"
 )
 
-func (c *Controller) reportUserTrafficTask() (err error) {
-	userTraffic, _ := c.server.GetUserTrafficSlice(c.tag, true)
+func (c *Controller) reportUserTrafficTask(ctx context.Context) (err error) {
+	var reportmin = 0
+	var devicemin = 0
+	if c.info.Common.BaseConfig != nil {
+		reportmin = 1
+		devicemin = 1
+	}
+	userTraffic, _ := c.server.GetUserTrafficSlice(c.tag, reportmin == 1)
 	if len(userTraffic) > 0 {
-		err = c.apiClient.ReportUserTraffic(userTraffic)
+		err = c.apiClient.ReportUserTraffic(ctx, userTraffic)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"tag": c.tag,
 				"err": err,
 			}).Info("Report user traffic failed")
+			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+				return err
+			}
 		} else {
 			log.WithField("tag", c.tag).Infof("Report %d users traffic", len(userTraffic))
-			log.WithField("tag", c.tag).Debugf("User traffic: %+v", userTraffic)
 		}
 	}
 
 	if onlineDevice, err := c.limiter.GetOnlineDevice(); err != nil {
-		log.Print(err)
+		log.WithFields(log.Fields{
+			"tag": c.tag,
+			"err": err,
+		}).Info("Get online device failed")
 	} else if len(*onlineDevice) > 0 {
 		// Only report user has traffic > 100kb to allow ping test
 		var result []panel.OnlineUser
@@ -44,40 +56,44 @@ func (c *Controller) reportUserTrafficTask() (err error) {
 			// json structure: { UID1:["ip1","ip2"],UID2:["ip3","ip4"] }
 			data[onlineuser.UID] = append(data[onlineuser.UID], onlineuser.IP)
 		}
-		if err = c.apiClient.ReportNodeOnlineUsers(&data); err != nil {
-			log.WithFields(log.Fields{
-				"tag": c.tag,
-				"err": err,
-			}).Info("Report online users failed")
-		} else {
-			log.WithField("tag", c.tag).Infof("Total %d online users, %d Reported", len(*onlineDevice), len(result))
-			log.WithField("tag", c.tag).Debugf("Online users: %+v", data)
+		if len(data) != 0 {
+			err = c.apiClient.ReportNodeOnlineUsers(ctx, &data)
+			if err != nil {
+				log.WithFields(log.Fields{
+					"tag": c.tag,
+					"err": err,
+				}).Info("Report online users failed")
+				if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+					return err
+				}
+			}
 		}
+		log.WithField("tag", c.tag).Infof("Total %d online users, %d Reported", len(*onlineDevice), len(result))
 	}
 
-	userTraffic = nil
 	return nil
 }
 
-func compareUserList(old, new []panel.UserInfo) (deleted, added []panel.UserInfo) {
-	oldMap := make(map[string]int)
-	for i, user := range old {
-		key := user.Uuid + strconv.Itoa(user.SpeedLimit)
-		oldMap[key] = i
+func compareUserList(old, new []panel.UserInfo) (deleted, added, modified []panel.UserInfo) {
+	oldMap := make(map[string]panel.UserInfo, len(old))
+	for _, u := range old {
+		oldMap[u.Uuid] = u
 	}
 
-	for _, user := range new {
-		key := user.Uuid + strconv.Itoa(user.SpeedLimit)
-		if _, exists := oldMap[key]; !exists {
-			added = append(added, user)
+	for _, u := range new {
+		if o, ok := oldMap[u.Uuid]; !ok {
+			added = append(added, u)
 		} else {
-			delete(oldMap, key)
+			if o.SpeedLimit != u.SpeedLimit || o.DeviceLimit != u.DeviceLimit {
+				modified = append(modified, u)
+			}
+			delete(oldMap, u.Uuid)
 		}
 	}
 
-	for _, index := range oldMap {
-		deleted = append(deleted, old[index])
+	for _, o := range oldMap {
+		deleted = append(deleted, o)
 	}
 
-	return deleted, added
+	return deleted, added, modified
 }
