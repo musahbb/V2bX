@@ -14,7 +14,7 @@ import (
 
 const (
 	DefaultNodeRetryCount = 1
-	DefaultNodeTimeout    = 15
+	DefaultNodeTimeout    = 60
 )
 
 type NodeConfig struct {
