@@ -1810,3 +1810,5 @@ rsc.io/sampler v1.3.0/go.mod h1:T1hPZKmBbMNahiBKFy5HrXp6adAjACjK9JXDnKaTXpA=
 sigs.k8s.io/yaml v1.2.0/go.mod h1:yfXDCHCao9+ENCvLSE62v9VSji2MKu5jeNfTrofGhJc=
 software.sslmate.com/src/go-pkcs12 v0.5.0 h1:EC6R394xgENTpZ4RltKydeDUjtlM5drOYIG9c6TVj2M=
 software.sslmate.com/src/go-pkcs12 v0.5.0/go.mod h1:Qiz0EyvDRJjjxGyUQa2cCNZn/wMyzrRJ/qcDXOQazLI=
+github.com/wyx2685/xray-core v0.0.0-20260624014836-20531d9dab04 h1:WaMskg+z5+hPyv4STb/jKQH5eVSt9jgoF32nKJElcBg=
+github.com/wyx2685/xray-core v0.0.0-20260624014836-20531d9dab04/go.mod h1:2WHLmuRFhaXTLPq4OpyIjNB8DGfJdB2kWCnWsJ/AxfI=
