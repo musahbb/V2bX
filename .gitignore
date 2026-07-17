@@ -16,3 +16,8 @@ output/*
 .idea/*
 newV2bX.sh
 quic_singbox.sh
+UPSTREAM_SYNC.md
+node/1.key
+node/1.pem
+node/cert/user/user-test@test.com.json
+.DS_Store
